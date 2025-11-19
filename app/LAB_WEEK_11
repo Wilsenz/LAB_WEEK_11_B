@@ -1,0 +1,25 @@
+1. Logic ini ada di class FileHelper.kt. Di sini kita pakai FileProvider
+buat nge-generate URI dari object File (yang di dalamnya udah ada path fisiknya).
+Ini penting biar path internal kita aman waktu di-pass ke aplikasi Kamera eksternal.
+
+2. Attribute uri: Ini refer ke Content URI yang dihasilkan sama FileProvider.
+Sifatnya temporary, gunanya sebagai pointer atau akses khusus biar aplikasi eksternal
+(Kamera) bisa nulis data ke storage private aplikasi kita tanpa kita harus nge-expose absolute path-nya .
+
+Attribute relativePath: Ini refer ke struktur folder tujuan di MediaStore.
+Nilainya biasanya string kayak Environment.DIRECTORY_PICTURES atau Environment.DIRECTORY_MOVIES.
+Ini ngasih tau sistem, "Nanti kalau file ini disave permanen, tolong masukin ke kategori folder Gambar atau Video ya" .
+
+3. initialization (generatePhotoUri): Aplikasi bikin object File kosong di cache/external files kita,
+terus di-wrap jadi URI aman pakai FileProvider .
+
+Intent Launch (launch): Kita nge-trigger Intent Kamera (ActivityResultLauncher) dan ngirim URI tadi
+sebagai parameter "Output". Artinya: "Bro Kamera, nanti hasil fotonya write ke URI ini ya".
+
+Capture Action: User foto -> Aplikasi Kamera nulis byte data gambarnya ke URI yang udah kita siapin tadi.
+
+Callback Handling: Setelah user tekan "OK" di kamera, launcher bakal balikin status sukses ke MainActivity.
+
+Persisting (insertImageToStore): Di sini proses finalisasinya. ProviderFileManager bakal baca file dari URI
+sementara tadi (pakai InputStream), terus nge-copy datanya (pakai IOUtils) ke entry baru di MediaStore (pakai ContentResolver).
+Sekarang file-nya resmi terdaftar di Galeri publik .
